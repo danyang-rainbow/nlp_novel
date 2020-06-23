@@ -1,6 +1,6 @@
+import json
 import codecs
-import os
-print(os.listdir())
+import argparse
 
-
-print("xxxx")
+if __name__ == '__main__':
+    pass
