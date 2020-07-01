@@ -55,7 +55,7 @@ def join_speakers(speakers0, speakers1):
         else:
             speakers0[speaker] = count
 
-def join_adjacent_scenes(scenes, adjacent_scene_sep='……'):
+def join_adjacent_scenes(scenes, adjacent_scene_sep='==='):
     joined_scenes = []
     for scene in scenes:
         start_idx, end_idx, scene_lines, speakers = scene
@@ -73,7 +73,7 @@ def join_adjacent_scenes(scenes, adjacent_scene_sep='……'):
 
 def join_scenes(scenes, x, name="",scene_sep='...'):
     all_lines = []
-
+    cc = 0
     for scene in scenes:
         x1,x2,x3,x4 = scene
         commentmax = 0
@@ -86,10 +86,13 @@ def join_scenes(scenes, x, name="",scene_sep='...'):
                 commentline = line
                 commentmax = tempx
         if len(all_lines) > 0:
-            all_lines.append("标题::"+commentline+str(commentmax))
             all_lines.append('旁白::' + scene_sep)
+        all_lines.append("标题::"+commentline+" "+str(commentmax))
         start_idx, end_idx, scene_lines, speakers = scene
         all_lines += scene_lines
+        cc += 1
+    if cc <= 2:
+        all_lines=[]
     return all_lines
 
 def get_comment_number(line_pre, line, line_next, novel_name, x):
@@ -112,11 +115,15 @@ def get_comment_number(line_pre, line, line_next, novel_name, x):
 
 if __name__ == '__main__':
 
+    # TODO: 数字中间空一格 done
+    # TODO：<= 2 done
+    # TODO: 以===为分隔 done
     filelist = os.listdir(novel_source_dir)
     fileintput = codecs.open("/nas/xd/data/kuaidian/young_collection_datas.json", encoding='utf-8')
     x = json.load(fileintput)
+
     for name in filelist:
-        if name == "我的哥哥是校草.txt_out.txt":
+        if name == "我的哥哥是校草.txt_out.txt" or name == "王默复仇记.txt_out.txt" or name == "高冷小草遇上霸气校花.txt_out.txt":
             continue
         print(name)
         lines = [line.strip() for line in codecs.open(os.path.join(novel_source_dir, name),encoding='utf-8')]
@@ -126,7 +133,7 @@ if __name__ == '__main__':
         for line in lines:
             if line[0] == "#":
                 newline = line[line.find("旁"):]
-                newlines.append("旁白::······")
+                newlines.append("旁白::===")
                 newlines.append(newline)
             else:
                 newlines.append(line)
@@ -163,7 +170,7 @@ if __name__ == '__main__':
         scenes = []
         start_idx, end_idx, scene_lines = 0, None, []
         for i, line in enumerate(lines):
-            if is_scene_sep(line):
+            if "旁白::===" in line:
                 end_idx = i
                 speakers = extract_speakers(scene_lines)
                 scenes.append([start_idx, end_idx, scene_lines, speakers])
@@ -179,7 +186,6 @@ if __name__ == '__main__':
             for speaker_pair in speaker_pairs:
                 AB_chats[speaker_pair].append(scene)
 
-
         base, ext = os.path.splitext(name)
 
         for namea in all_speakers:
@@ -188,7 +194,8 @@ if __name__ == '__main__':
                     key = (namea, nameb)
                     AB_chat_fname = base + '_' + key[0] + 'vs' + key[1] + ext
                     all_lines = join_scenes(join_adjacent_scenes(AB_chats[key]), x=x, name=base)
-                    if len(all_lines) == 0: continue
-                    with codecs.open(output_dir+'/AB_chats/' + AB_chat_fname, mode='w',encoding='utf-8') as f:
+                    if len(all_lines) == 0 : continue
+                    if "/" in AB_chat_fname: continue
+                    with codecs.open(os.path.join(output_dir+'/AB_chats2', AB_chat_fname), mode='w',encoding='utf-8') as f:
                         for line in all_lines:
                             print(line.replace('::', '：'), file=f)
