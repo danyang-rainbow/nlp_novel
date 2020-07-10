@@ -2,7 +2,7 @@ import tqdm
 import json
 import os
 
-output_dir = "/nas/jiangdanyang/data/huameng/"
+output_dir = "/nas/jiangdanyang/data/huameng_with_number/"
 fnames = os.listdir('/nas/xd/data/huameng/20200629_novels')
 for fname in fnames:
     d = json.load(open("/nas/xd/data/huameng/20200629_novels/"+fname))
@@ -30,4 +30,4 @@ for fname in fnames:
                 assert sent['type'] in [1, 2], str(sent['type'])
                 if sent['type'] == 1:
                     content = sent['content'] #if sent['type'] == 1 else '[IMAGE] ' + os.path.basename(sent['content'])
-                    print(role_name + '::' + content, file=f) # nComments
+                    print(role_name + '::' + content+" "+sent["nComments"], file=f) # nComments
