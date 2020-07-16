@@ -3,6 +3,34 @@ import re
 import argparse
 import os
 
+def filter_lines(lines, keep_chapter_name=False):
+    ret_lines = []
+    for line in lines:
+        if '::' not in line:
+            assert is_chapter_name2(line), line
+            if keep_chapter_name:
+                ret_lines.append(line)
+            continue
+        speaker, speech = line.split('::', maxsplit=1)
+        if speaker.startswith('旁白'):
+            if any(s in speech for s in ['正文', '本章完', '待续', '未完', '分割线', '卡文']) or \
+                all(not is_cjk_char(c) or c == '卡' for c in speech) and any(c == '卡' for c in speech):
+                continue
+            if speech.strip() == '':
+                continue
+        ret_lines.append(line)
+    return ret_lines
+
+def is_cjk_char(char):
+    return '\u4e00' <= char <= '\u9fff'
+
+def is_chapter_name2(line):
+    b = '::' not in line or  line.split( # jdy changed
+    )[0][0] == '第' and (line.split()[0][-1] == '话' or line.split()[0][-1] == '章')   # '第23话' or '第45话 回家'
+    # if line.startswith('第6话'): assert b, line
+    # xx公寓
+    return b
+
 def is_chapter_name(line):
     chapter_pattern = re.compile(r'第[0-9零一二三四五六七八九十百千]+章')
     chapter_pattern2 = re.compile(r'^[0-9零一二三四五六七八九十百千]+$')
@@ -98,6 +126,22 @@ def processf(lines, lines_with_comment):
 
     return newline, newlines_with_comment
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+
+    try:
+        import unicodedata
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+
+    return False
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", type=str, required=True, help="The file to be processed")
@@ -121,6 +165,7 @@ if __name__ == "__main__":
         lines = [line.strip() for line in file_input]
 
         if(len(lines) != len(lines_with_comment)):
+            print(name+"~~~~~~~~",len(lines),len(lines_with_comment),len(file_with_comment.readlines()))
             continue
 
         newlines, newlines_with_comment = processf(lines, lines_with_comment)
@@ -150,6 +195,9 @@ if __name__ == "__main__":
         file_output = codecs.open(file_outpout_name, mode="w", encoding='utf-8')
         assert len(newlines)==len(lines_with_comment)
         for i, line in enumerate(newlines):
-            file_output.write(line+" "+lines_with_comment[i].strip())
+            if is_number(lines_with_comment[i].strip()):
+                file_output.write(line+" "+lines_with_comment[i].strip())
+            else:
+                file_output.write(line+" "+"0")
             file_output.write('\n')
         file_output.close()

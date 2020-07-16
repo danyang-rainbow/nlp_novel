@@ -71,7 +71,7 @@ def join_adjacent_scenes(scenes, adjacent_scene_sep='==='):
             joined_scenes[-1] = [start_idx, end_idx, scene_lines, last_speakers]
     return joined_scenes
 
-def join_scenes(scenes, name="",scene_sep='...'):
+def join_scenes(scenes, name="",scene_sep='···'):
     all_lines = []
     cc = 0
     for scene in scenes:
