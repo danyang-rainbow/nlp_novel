@@ -3,33 +3,6 @@ import re
 import argparse
 import os
 
-def filter_lines(lines, keep_chapter_name=False):
-    ret_lines = []
-    for line in lines:
-        if '::' not in line:
-            assert is_chapter_name2(line), line
-            if keep_chapter_name:
-                ret_lines.append(line)
-            continue
-        speaker, speech = line.split('::', maxsplit=1)
-        if speaker.startswith('旁白'):
-            if any(s in speech for s in ['正文', '本章完', '待续', '未完', '分割线', '卡文']) or \
-                all(not is_cjk_char(c) or c == '卡' for c in speech) and any(c == '卡' for c in speech):
-                continue
-            if speech.strip() == '':
-                continue
-        ret_lines.append(line)
-    return ret_lines
-
-def is_cjk_char(char):
-    return '\u4e00' <= char <= '\u9fff'
-
-def is_chapter_name2(line):
-    b = '::' not in line or  line.split( # jdy changed
-    )[0][0] == '第' and (line.split()[0][-1] == '话' or line.split()[0][-1] == '章')   # '第23话' or '第45话 回家'
-    # if line.startswith('第6话'): assert b, line
-    # xx公寓
-    return b
 
 def is_chapter_name(line):
     chapter_pattern = re.compile(r'第[0-9零一二三四五六七八九十百千]+章')
@@ -47,7 +20,7 @@ def is_scene_sep(line, bos='::', sep_chars=None):
     speaker, speech = line.split(bos, maxsplit=1)
     return speaker == '旁白' and all(c in sep_chars for c in speech)
 
-def processf(lines, lines_with_comment):
+def processf(lines):
     # 过第一遍，拿到所有的标记行和分数
     comment_lines_score = []
     comment_lines_idx = []
@@ -124,7 +97,7 @@ def processf(lines, lines_with_comment):
             newline.append(line)
 
 
-    return newline, newlines_with_comment
+    return newline
 
 def is_number(s):
     try:
@@ -153,22 +126,23 @@ if __name__ == "__main__":
             continue
         print(name)
         file_input_name = os.path.join(args.input_dir,name)
-        file_outpout_name = "/nas/jiangdanyang/huameng_convert/"+ name + "_out.txt"
+        file_outpout_name = "/nas/jiangdanyang/data/huameng_convert/"+ name + "_out.txt"
         file_input  = codecs.open(file_input_name, mode='r', encoding='utf-8')
 
 
-        if not os.path.exists("/nas/jiangdanyang/data/huameng_with_number/"+ name):
-            continue
-        file_with_comment = codecs.open("/nas/jiangdanyang/data/huameng_with_number/"+ name, mode='r',encoding='utf-8')
-        lines_with_comment = [line.split(" ")[-1] for line in file_with_comment]
+        # if not os.path.exists("/nas/jiangdanyang/data/huameng_with_number/"+ name):
+        #     continue
+        # file_with_comment = codecs.open("/nas/jiangdanyang/data/huameng_with_number/"+ name, mode='r',encoding='utf-8')
+        # lines_with_comment = [line.split(" ")[-1] for line in file_with_comment]
 
         lines = [line.strip() for line in file_input]
+        # lines = [line[:line.rfind(" ")] for line in lines]
+        #
+        # if(len(lines) != len(lines_with_comment)):
+        #     print(name+"~~~~~~~~",len(lines),len(lines_with_comment),len(file_with_comment.readlines()))
+        #     continue
 
-        if(len(lines) != len(lines_with_comment)):
-            print(name+"~~~~~~~~",len(lines),len(lines_with_comment),len(file_with_comment.readlines()))
-            continue
-
-        newlines, newlines_with_comment = processf(lines, lines_with_comment)
+        newlines = processf(lines)
         # file_out1 = codecs.open("/nas/jiangdanyang/scene_cut_datas_convert/"+name+str(0),mode='w', encoding='utf-8')
         # for line in newlines:
         #     file_out1.write(line)
@@ -179,7 +153,7 @@ if __name__ == "__main__":
         while( flag != 0):
             flag = 0
             origin = newlines.copy()
-            newlines, newlines_with_comment = processf(newlines, newlines_with_comment)
+            newlines = processf(newlines)
             for i,line in enumerate(origin):
                 if line != newlines[i]:
                     flag = 1
@@ -193,11 +167,12 @@ if __name__ == "__main__":
             err += 1
         # 写文件阶段
         file_output = codecs.open(file_outpout_name, mode="w", encoding='utf-8')
-        assert len(newlines)==len(lines_with_comment)
+        # assert len(newlines)==len(lines_with_comment)
         for i, line in enumerate(newlines):
-            if is_number(lines_with_comment[i].strip()):
-                file_output.write(line+" "+lines_with_comment[i].strip())
-            else:
-                file_output.write(line+" "+"0")
+            file_output.write(line)
+            # if is_number(lines_with_comment[i].strip()):
+            #     file_output.write(line+" "+lines_with_comment[i].strip())
+            # else:
+            #     file_output.write(line+" "+"0")
             file_output.write('\n')
         file_output.close()

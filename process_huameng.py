@@ -67,11 +67,11 @@ for fname in fnames:
                 imagetext = imagetext.replace("||","~")
                 if sent['type']!= 1 and imagetext != "":
                     content = sent['content'] if sent['type'] == 1 else '[' + imagetext+']'
-                    # newlines = []
-                    # newlines.append(role_name + '::' + content)
-                    # outlines = filter_lines(newlines)
-                    # if len(outlines) != 0:
-                    print(role_name + '::' + content + ' ' + sent['nComments'], file=f) # nComments
+                    newlines = []
+                    newlines.append(role_name + '::' + content)
+                    outlines = filter_lines(newlines)
+                    if len(outlines) != 0:
+                        print(role_name + '::' + content + ' ' + sent['nComments'], file=f) # nComments
                 elif sent['type'] == 1:
                     content = sent['content']
                     newlines = []

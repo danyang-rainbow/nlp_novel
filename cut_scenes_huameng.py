@@ -4,8 +4,8 @@ import codecs
 from itertools import combinations
 import json
 
-novel_source_dir = "/nas/jiangdanyang/huameng_convert"
-output_dir = "/nas/jiangdanyang/bk3"
+novel_source_dir = "/nas/jiangdanyang/data/huameng_convert"
+output_dir = "/nas/jiangdanyang/data/bk3"
 
 def extract_speakers(lines, include_aside=False):
     speakers = defaultdict(int)
